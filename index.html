@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="Keywords" content="">
+<meta name="Description" content="">
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<link rel="stylesheet" href="//at.alicdn.com/t/font_626784_0j006ef09vff.css" />
+<script src="https://cdn.staticfile.org/jquery/1.11.2/jquery.min.js"></script>
+<style type="text/css">
+*{margin:0px; padding:0px;}
+body{text-align:center; color:green;padding-top:50px;}
+a{text-decoration:none; font-size:50px;}
+</style>
+<title>垃圾互动课堂</title>
+</head>
+<body>
+<a href="http://sao315.com/w/api/saoyisao?redirect_uri=http://xx.xxx.xxx/api"><i class='dzwfont dzw-saomiao' style="font-size:45px;"></i>扫码签到</a>
+<div id="result"></div>
+</body>
+<script type="text/javascript">
+var qr=getQueryString("qrresult");
+if(qr){
+	//alert(qr);
+	$("#result").html(qr);
+}
+
+function getQueryString(name)
+{
+	var reg = new RegExp("\\b"+ name +"=([^&]*)");
+	var r = location.href.match(reg);
+	if (r!=null) return unescape(r[1]);
+}
+</script>
+</html>
