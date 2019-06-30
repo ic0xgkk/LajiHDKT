@@ -6,6 +6,7 @@ import requests
 import wechatpy
 import random
 import markdown
+import threading
 
 logname = time.strftime("%Y%m%d%H%M%S", time.localtime())
 logname = './log/lajihdkt-' + logname + '.log'
@@ -75,6 +76,9 @@ class WeChatJSAPI(object):
 
 class FlaskApp(object):
     def __init__(self, WX: WeChatJSAPI):
+        self.full_table = ""
+        self.Lock = 0
+        self.Lock = threading.RLock()
         self.WXClient = WX
         self.app = flask.Flask(__name__)
         self.url_route()
@@ -161,6 +165,7 @@ class FlaskApp(object):
         return flask.json.dumps(c)
 
     def sign(self):
+        self.full_table = ""
         html = """
                         <!DOCTYPE html>
                         <html>
@@ -203,23 +208,30 @@ class FlaskApp(object):
         if cid == "" or ts == "":
             return "拒绝访问"
 
-        full_table = ""
         for user in users:
-            table_md = "| Key | Value |\n| ------ | ------ |\n"
-            msg = self.post_sign(user, cid, ts)
-            table_md = table_md + "| %s | %s |\n" % ("Name", user['name'])
-            resp_dict = json.loads(msg)
-            keys = list(resp_dict.keys())
-            values = list(resp_dict.values())
-            for i in range(len(keys)):
-                key = str(keys[i])
-                value = str(values[i])
-                table_md = table_md + "| %s | %s |\n" % (key, value)
-            full_table = full_table + table_md + "\n\n---\n\n"
+            t = threading.Thread(target=self.thread_sign, args=(user, cid, ts))
+            t.daemon = True
+            t.start()
+        threading.Event.wait()
 
-        table = self.__md_conv(full_table)
+        table = self.__md_conv(self.full_table)
 
         return html % table
+
+    def thread_sign(self, user, cid, ts):
+        self.Lock.acquire()
+        table_md = "| Key | Value |\n| ------ | ------ |\n"
+        msg = self.post_sign(user, cid, ts)
+        table_md = table_md + "| %s | %s |\n" % ("Name", user['name'])
+        resp_dict = json.loads(msg)
+        keys = list(resp_dict.keys())
+        values = list(resp_dict.values())
+        for i in range(len(keys)):
+            key = str(keys[i])
+            value = str(values[i])
+            table_md = table_md + "| %s | %s |\n" % (key, value)
+        self.full_table = self.full_table + table_md + "\n\n---\n\n"
+        self.Lock.release()
 
     def __md_conv(self, src: str):
         html = (markdown.markdown(src, extensions=[
